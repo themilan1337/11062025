@@ -4,9 +4,15 @@ services:
   db:
     image: postgres:15
     environment:
-      POSTGRES_USER: username
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: postgresdb
+      POSTGRES_USER: username # The PostgreSQL official image will create this user.
+      POSTGRES_PASSWORD: password # And set this password for the user.
+      POSTGRES_DB: postgresdb # And create this database, owned by the user.
+      # Note: The 'postgres' superuser is also created by the image.
+      # While a manual PostgreSQL installation requires setting a password for the 'postgres' user,
+      # for this Docker setup, you'll primarily interact with the database using the credentials
+      # specified by POSTGRES_USER and POSTGRES_PASSWORD. The 'postgres' user will have a
+      # randomly generated password by default if POSTGRES_PASSWORD is not set for it, 
+      # or you can set POSTGRES_HOST_AUTH_METHOD=trust for local development if needed (not recommended for production).
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -16,7 +22,10 @@ services:
 
   web:
     build: .
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    # Run migrations before starting the app
+    # Ensure alembic is installed (it should be via requirements.txt)
+    # The working directory is /app/src, but alembic.ini is in /app, so we cd ..
+    command: sh -c "cd .. && alembic upgrade head && cd src && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
     volumes:
       - ./src:/app/src
       - ./alembic.ini:/app/alembic.ini
