@@ -1,14 +1,12 @@
 from celery import Celery
 from celery.schedules import crontab
-
-# This should ideally come from config, but for now, hardcoding for simplicity
-REDIS_URL = "redis://localhost:6379/0"
+from src.config import settings # Import settings from src.config
 
 celery_app = Celery(
-    "tasks",
-    broker=REDIS_URL,
-    backend=REDIS_URL,
-    include=["src.tasks.background_tasks"]  # Path to your tasks module
+    "src.tasks", # Naming the app with src prefix for clarity
+    broker=settings.celery_broker_url,
+    backend=settings.celery_result_backend,
+    include=["src.tasks.background_tasks"]  # Path to tasks module relative to PYTHONPATH
 )
 
 celery_app.conf.update(
@@ -22,7 +20,7 @@ celery_app.conf.update(
 # Example of a periodic task: runs every day at midnight
 celery_app.conf.beat_schedule = {
     'fetch-data-every-day': {
-        'task': 'src.tasks.background_tasks.fetch_data_and_save_to_db',
+        'task': 'src.tasks.background_tasks.fetch_data_and_save_to_db', # Task path relative to PYTHONPATH
         'schedule': crontab(hour=0, minute=0), # Everyday at midnight
     },
 }

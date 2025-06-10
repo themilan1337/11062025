@@ -38,8 +38,11 @@ COPY migrations /app/migrations
 # However, if building the image standalone and expecting .env to be baked in, then COPY .env is needed.
 # For now, assuming docker-compose handles it.
 
-# Set working directory to src for Python imports
-WORKDIR /app/src # Setting workdir to src means Python imports will be relative to src
+# Set PYTHONPATH to include the /app directory so 'src' can be imported
+ENV PYTHONPATH=/app
+
+# Set working directory to /app for consistency
+WORKDIR /app
 
 EXPOSE 8000
 
@@ -48,4 +51,5 @@ RUN adduser --disabled-password --gecos '' appuser
 USER appuser
 
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# The CMD for uvicorn needs to specify the module path relative to WORKDIR /app
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

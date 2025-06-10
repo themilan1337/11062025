@@ -4,14 +4,15 @@ from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 import os
 
-from src.assitant import get_assistant, ASSISTANT_TYPE_GEMINI, ASSISTANT_TYPE_OPENAI, ASSISTANT_TYPE_CLAUDE
+from src.assitant import get_assistant, ASSISTANT_TYPE_OPENAI # Adjusted path
 from sqlalchemy import text
 from sqlalchemy.exc import OperationalError
+from typing import Optional # Added for ChatRequest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from auth.api import router as auth_router
-from database import get_async_db
-from tasks.api import router as tasks_router
+from src.auth.api import router as auth_router # Adjusted path
+from src.database import get_async_db, get_db # Adjusted path
+from src.tasks.api import router as tasks_router # Adjusted path
 
 app = FastAPI()
 

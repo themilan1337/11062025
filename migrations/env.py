@@ -5,12 +5,14 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-# Add the src directory to Python path so we can import from src
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
+# Add the project root directory to Python path for consistent imports
+# This allows imports like 'from src.database import Base'
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from auth import schema  # Import to register schema with Base.metadata
-from database import Base
-from tasks import schema  # Import to register schema with Base.metadata
+from src.database import Base  # Corrected import for Base
+# Import your models here to ensure they are registered with Base.metadata
+import src.auth.models  # Assuming models are in src/auth/models.py
+import src.tasks.models # Assuming models are in src/tasks/models.py
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

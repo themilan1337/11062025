@@ -24,8 +24,8 @@ services:
     build: .
     # Run migrations before starting the app
     # Ensure alembic is installed (it should be via requirements.txt)
-    # The working directory is /app/src, but alembic.ini is in /app, so we cd ..
-    command: sh -c "cd .. && alembic upgrade head && cd src && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+    # WORKDIR is /app, alembic.ini is at /app/alembic.ini
+    command: sh -c "alembic upgrade head && uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload"
     volumes:
       - ./src:/app/src
       - ./alembic.ini:/app/alembic.ini
@@ -37,7 +37,7 @@ services:
       - db
     env_file:
       - .env
-    working_dir: /app/src
+    working_dir: /app
 
   redis:
     image: redis:latest
@@ -48,7 +48,7 @@ services:
     
   celery_worker:
     build: .
-    command: celery -A src.celery.celery_app worker -l info
+    command: celery -A src.celery worker -l info
     volumes:
       - ./src:/app/src
       - ./.env:/app/.env # Ensure .env is available in the container
@@ -57,14 +57,14 @@ services:
       - redis
     env_file:
       - .env
-    working_dir: /app/src # Important for relative imports in celery tasks
+    working_dir: /app # WORKDIR is /app, PYTHONPATH includes /app
 
   celery_beat:
     build: .
     # The command for beat should use the beat subcommand, not worker
     # Using DatabaseScheduler, ensure django-celery-beat is in requirements.txt if you use it
     # For now, using default scheduler. If DatabaseScheduler is needed, add dependency and migrations.
-    command: celery -A src.celery.celery_app beat -l info # --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    command: celery -A src.celery beat -l info # --scheduler django_celery_beat.schedulers:DatabaseScheduler
     volumes:
       - ./src:/app/src
       - ./.env:/app/.env # Ensure .env is available
@@ -75,7 +75,7 @@ services:
       # - celery_worker 
     env_file:
       - .env
-    working_dir: /app/src # Important for relative imports
+    working_dir: /app # WORKDIR is /app, PYTHONPATH includes /app
   
 volumes:
   postgres_data:
