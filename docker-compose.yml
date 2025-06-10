@@ -1,0 +1,72 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: username
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: postgresdb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - default
+
+  web:
+    build: .
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./src:/app/src
+      - ./alembic.ini:/app/alembic.ini
+      - ./migrations:/app/migrations
+      - ./.env:/app/.env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    env_file:
+      - .env
+    working_dir: /app/src
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    networks:
+      - default
+    
+  celery_worker:
+    build: .
+    command: celery -A src.celery.celery_app worker -l info
+    volumes:
+      - ./src:/app/src
+      - ./.env:/app/.env # Ensure .env is available in the container
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - .env
+    working_dir: /app/src # Important for relative imports in celery tasks
+
+  celery_beat:
+    build: .
+    # The command for beat should use the beat subcommand, not worker
+    # Using DatabaseScheduler, ensure django-celery-beat is in requirements.txt if you use it
+    # For now, using default scheduler. If DatabaseScheduler is needed, add dependency and migrations.
+    command: celery -A src.celery.celery_app beat -l info # --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    volumes:
+      - ./src:/app/src
+      - ./.env:/app/.env # Ensure .env is available
+    depends_on:
+      - db
+      - redis
+      # It's good practice for beat to depend on the worker, or at least ensure broker is ready.
+      # - celery_worker 
+    env_file:
+      - .env
+    working_dir: /app/src # Important for relative imports
+  
+volumes:
+  postgres_data:

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Assistant Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .chat-container {
+            height: calc(100vh - 180px);
+        }
+        .message-container {
+            max-height: calc(100vh - 250px);
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <div class="bg-white rounded-lg shadow-lg p-6 chat-container">
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-6">
+                <h1 class="text-2xl font-bold text-gray-800">AI Assistant Chat</h1>
+                <select id="assistantType" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5">
+                    <option value="gemini">Gemini</option>
+                    <option value="openai">OpenAI</option>
+                    <option value="claude">Claude</option>
+                </select>
+            </div>
+
+            <!-- Chat Messages -->
+            <div id="messages" class="message-container overflow-y-auto mb-6 space-y-4">
+                <!-- Messages will be inserted here -->
+            </div>
+
+            <!-- Input Form -->
+            <form id="chatForm" class="flex gap-4">
+                <input type="text" id="messageInput" 
+                       class="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                       placeholder="Type your message...">
+                <button type="submit" 
+                        class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    Send
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const messagesContainer = document.getElementById('messages');
+        const chatForm = document.getElementById('chatForm');
+        const messageInput = document.getElementById('messageInput');
+        const assistantTypeSelect = document.getElementById('assistantType');
+
+        function appendMessage(content, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `flex ${isUser ? 'justify-end' : 'justify-start'}`;
+            
+            const messageBubble = document.createElement('div');
+            messageBubble.className = `max-w-[70%] rounded-lg p-4 ${isUser ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'}`;
+            messageBubble.textContent = content;
+            
+            messageDiv.appendChild(messageBubble);
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            // Append user message
+            appendMessage(message, true);
+            messageInput.value = '';
+
+            try {
+                // Show loading indicator
+                appendMessage('Thinking...', false);
+
+                // Make API call to your backend
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        assistant_type: assistantTypeSelect.value
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const data = await response.json();
+                
+                // Remove loading indicator and append AI response
+                messagesContainer.removeChild(messagesContainer.lastChild);
+                appendMessage(data.response, false);
+            } catch (error) {
+                console.error('Error:', error);
+                // Remove loading indicator and show error
+                messagesContainer.removeChild(messagesContainer.lastChild);
+                appendMessage('Sorry, there was an error processing your request.', false);
+            }
+        });
+
+        // Add initial greeting
+        appendMessage('Hello! I\'m your AI assistant. How can I help you today?', false);
+    </script>
+</body>
+</html>
