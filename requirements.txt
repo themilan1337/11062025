@@ -28,6 +28,4 @@ celery==5.4.0 # Or latest compatible version
 django-celery-beat==2.6.0 # For DatabaseScheduler with Celery Beat
 flower==2.0.1 # Optional: for monitoring Celery tasks
 # AI Assistant Libraries
-google-generativeai==0.7.2 # For Gemini
-openai==1.37.1 # For OpenAI
-anthropic==0.30.0 # For Claude
+openai

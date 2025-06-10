@@ -19,12 +19,12 @@
         <div class="bg-white rounded-lg shadow-lg p-6 chat-container">
             <!-- Header -->
             <div class="flex items-center justify-between mb-6">
-                <h1 class="text-2xl font-bold text-gray-800">AI Assistant Chat</h1>
-                <select id="assistantType" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5">
+                <h1 class="text-2xl font-bold text-gray-800">AI Assistant Chat (OpenAI)</h1>
+                <!-- <select id="assistantType" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5">
                     <option value="gemini">Gemini</option>
                     <option value="openai">OpenAI</option>
                     <option value="claude">Claude</option>
-                </select>
+                </select> -->
             </div>
 
             <!-- Chat Messages -->
@@ -49,7 +49,7 @@
         const messagesContainer = document.getElementById('messages');
         const chatForm = document.getElementById('chatForm');
         const messageInput = document.getElementById('messageInput');
-        const assistantTypeSelect = document.getElementById('assistantType');
+        // const assistantTypeSelect = document.getElementById('assistantType'); // Dropdown removed
 
         function appendMessage(content, isUser = false) {
             const messageDiv = document.createElement('div');
@@ -85,7 +85,8 @@
                     },
                     body: JSON.stringify({
                         message: message,
-                        assistant_type: assistantTypeSelect.value
+                        assistant_type: "openai", // Hardcoded to OpenAI
+                        model_name: "gpt-3.5-turbo" // Example: specify a model
                     })
                 });
 
@@ -107,7 +108,7 @@
         });
 
         // Add initial greeting
-        appendMessage('Hello! I\'m your AI assistant. How can I help you today?', false);
+        appendMessage('Hello! I\'m your OpenAI assistant. How can I help you today?', false);
     </script>
 </body>
 </html>

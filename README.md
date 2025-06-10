@@ -1,12 +1,12 @@
 # FastAPI Project with AI Assistants, Celery, and Redis
 
-This project is a FastAPI application featuring user authentication, task management, AI assistant integration (Gemini, OpenAI, Claude), background tasks with Celery, and Redis for caching/messaging.
+This project is a FastAPI application featuring user authentication, task management, AI assistant integration (OpenAI), background tasks with Celery, and Redis for caching/messaging.
 
 ## Features
 
 - **User Authentication**: Secure registration and login using JWT tokens.
 - **Task Management**: CRUD operations for tasks.
-- **AI Assistants**: Chat interface with multiple AI backends (Gemini, OpenAI, Claude).
+- **AI Assistants**: Chat interface with OpenAI backend.
 - **Background Tasks**: Celery for asynchronous operations, including a daily data fetching task.
 - **Database**: PostgreSQL for data storage, with Alembic for migrations.
 - **Caching/Messaging**: Redis integration.
@@ -40,10 +40,8 @@ This project is a FastAPI application featuring user authentication, task manage
     ALGORITHM=HS256
     ACCESS_TOKEN_EXPIRE_MINUTES=30
 
-    # AI Assistant API Keys (Obtain these from the respective providers)
-    GEMINI_API_KEY=your_gemini_api_key
+    # AI Assistant API Keys (Obtain from OpenAI)
     OPENAI_API_KEY=your_openai_api_key
-    ANTHROPIC_API_KEY=your_anthropic_api_key
 
     # Celery/Redis (using service names from docker-compose)
     CELERY_BROKER_URL=redis://redis:6379/0
@@ -92,11 +90,9 @@ docker-compose.yml    # Docker Compose configuration
 migrations/           # Alembic migration scripts
 requirements.txt      # Python dependencies
 src/
-├── assitant/         # AI assistant modules (base, gemini, openai, claude)
+├── assitant/         # AI assistant modules (base, openai)
 │   ├── __init__.py
 │   ├── base.py
-│   ├── claude.py
-│   ├── gemini.py
 │   └── openai.py
 ├── auth/             # Authentication logic
 ├── celery.py         # Celery application setup
@@ -130,7 +126,7 @@ Key endpoints include:
 -   **Tasks** (`/tasks`):
     -   CRUD operations for tasks.
 -   **Chat** (`/api/chat`):
-    -   `POST`: Send a message to the selected AI assistant.
+    - `POST`: Send a message to the OpenAI assistant.
 
 ## Celery Tasks
 
@@ -175,7 +171,7 @@ Deploying this project to a DigitalOcean Droplet (or any VPS) using Docker would
 - [x] Connect to celery(docker compose)
 - [ ] Deploy your project in Droplet(with using docker) - *Conceptual steps provided*
 - [x] Add a task for everyday fetching data from the website and save it to the database
-- [x] Add directory Assitant and create an assisntant(gemini,openai,claude etc.)
+- [x] Add directory Assitant and create an assisntant (OpenAI)
 - [ ] Use a2a to create a chatbot - *Basic assistant structure is in place, A2A is a more advanced concept*
 - [x] Connect chatbot to your Frontend
 

@@ -15,53 +15,47 @@ from tasks.api import router as tasks_router
 
 app = FastAPI()
 
-# Mount static files directory (for index.html and any other static assets)
-# Get the absolute path to the 'static' directory
-static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
-app.mount("/static", StaticFiles(directory=static_dir), name="static")
-
 class ChatRequest(BaseModel):
     message: str
-    assistant_type: str = ASSISTANT_TYPE_GEMINI # Default to Gemini
-    # session_id: Optional[str] = None # For session management if needed
+    assistant_type: Optional[str] = "openai" # Defaults to openai, can be omitted by frontend
+    model_name: Optional[str] = None
 
 class ChatResponse(BaseModel):
     response: str
 
-app.include_router(auth_router, tags=["auth"])
-app.include_router(tasks_router, tags=["tasks"])
-
-
-@app.get("/")
-def read_root():
-    return {"message": "Hello, World!"}
-
-
-@app.get("/", response_class=HTMLResponse)
-async def read_index(request: Request):
-    # Serve the index.html file
-    index_html_path = os.path.join(static_dir, "index.html")
-    try:
-        with open(index_html_path, "r") as f:
-            html_content = f.read()
-        return HTMLResponse(content=html_content)
-    except FileNotFoundError:
-        raise HTTPException(status_code=404, detail="index.html not found")
-
 @app.post("/api/chat", response_model=ChatResponse)
-async def chat_with_assistant(chat_request: ChatRequest):
+async def chat_with_assistant(request: ChatRequest, db: AsyncSession = Depends(get_db)):
     try:
-        assistant = get_assistant(chat_request.assistant_type)
-        # For simplicity, using generate_response. For actual chat, use generate_chat_response with history.
-        # This example is stateless for now.
-        ai_response = await assistant.generate_response(chat_request.message)
+        # assistant_type will default to 'openai' if not provided by the client
+        # or can be explicitly set to 'openai' if the client still sends it.
+        # We force OpenAI usage here regardless of what client might send for assistant_type
+        assistant = get_assistant("openai", model_name=request.model_name)
+        
+        ai_response = await assistant.get_chat_response(request.message)
         return ChatResponse(response=ai_response)
-    except ValueError as e:
+    except ValueError as e: # Should not happen if get_assistant is robust
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        # Log the exception for debugging
-        print(f"Error in /api/chat: {e}")
-        raise HTTPException(status_code=500, detail="An error occurred with the AI assistant.")
+        print(f"Error in chat_with_assistant: {e}")
+        raise HTTPException(status_code=500, detail="An internal error occurred.")
+
+# Mount static files
+app.mount("/static", StaticFiles(directory="src/static"), name="static")
+
+@app.get("/", response_class=HTMLResponse)
+async def read_root():
+    try:
+        with open("src/static/index.html") as f:
+            return HTMLResponse(content=f.read(), status_code=200)
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="index.html not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error reading index.html: {str(e)}")
+
+
+# Add routers
+app.include_router(auth_router, prefix="/auth", tags=["auth"])
+app.include_router(task_router, prefix="/tasks", tags=["tasks"])
 
 @app.get("/health")
 async def check_health(db: AsyncSession = Depends(get_async_db)):

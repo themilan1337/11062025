@@ -1,37 +1,29 @@
 from typing import Optional
 
-from src.assitant.base import BaseAssistant
-from src.assitant.gemini import GeminiAssistant
-from src.assitant.openai import OpenAIAssistant
-from src.assitant.claude import ClaudeAssistant
-
-ASSISTANT_TYPE_GEMINI = "gemini"
-ASSISTANT_TYPE_OPENAI = "openai"
-ASSISTANT_TYPE_CLAUDE = "claude"
+from .base import BaseAssistant, AIMessage, AIConversation
+from .openai import OpenAIAssistant
 
 
 def get_assistant(
-    assistant_type: str,
-    model_name: Optional[str] = None
+    assistant_type: str, model_name: str | None = None
 ) -> BaseAssistant:
-    """Factory function to get an instance of an AI assistant."""
-    if assistant_type == ASSISTANT_TYPE_GEMINI:
-        return GeminiAssistant(model_name=model_name or "gemini-pro")
-    elif assistant_type == ASSISTANT_TYPE_OPENAI:
-        return OpenAIAssistant(model_name=model_name or "gpt-3.5-turbo")
-    elif assistant_type == ASSISTANT_TYPE_CLAUDE:
-        # Ensure you use a valid Claude model name
-        return ClaudeAssistant(model_name=model_name or "claude-3-opus-20240229") 
+    if assistant_type == "openai":
+        # Here you could add logic to select different OpenAI models 
+        # or configurations based on model_name or other parameters
+        # For now, it defaults to the standard OpenAIAssistant
+        return OpenAIAssistant(model_name=model_name) 
     else:
-        raise ValueError(f"Unknown assistant type: {assistant_type}")
+        # Optionally, raise an error for unsupported types or default to OpenAI
+        # For this refinement, we assume only 'openai' is valid and was intended.
+        # If other types were accidentally passed, this would be a good place to log/error.
+        # However, the request implies 'openai' is the only intended type now.
+        return OpenAIAssistant(model_name=model_name) 
+
 
 __all__ = [
     "BaseAssistant",
-    "GeminiAssistant",
+    "AIMessage",
+    "AIConversation",
     "OpenAIAssistant",
-    "ClaudeAssistant",
     "get_assistant",
-    "ASSISTANT_TYPE_GEMINI",
-    "ASSISTANT_TYPE_OPENAI",
-    "ASSISTANT_TYPE_CLAUDE",
 ]
